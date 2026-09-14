@@ -1,273 +1,1008 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="doomsday">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Doomsday</title>
-<link rel="icon" type="image/x-icon" href="https://www.gstatic.com/classroom/logo_square_rounded.svg">
-<link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./gamepix.css">
+<title id="pageTitle">Doomsday</title>
+<link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23140f10'/%3E%3Cpath d='M50 14 L82 78 L18 78 Z' fill='%23ff4d2e'/%3E%3Ccircle cx='50' cy='62' r='6' fill='%23140f10'/%3E%3Crect x='46' y='34' width='8' height='20' fill='%23140f10'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  :root[data-theme="doomsday"] {
+    --bg: #140f10;
+    --panel: #1d1517;
+    --panel-raised: #281d1f;
+    --line: #3a2a2b;
+    --text: #f3ece7;
+    --text-dim: #b89a94;
+    --accent: #ff4d2e;
+    --accent2: #ffb545;
+    --shadow: rgba(0,0,0,0.55);
+    --particle: 255,120,70;
+  }
+
+  :root[data-theme="wasteland"] {
+    --bg: #15150f;
+    --panel: #1e1e16;
+    --panel-raised: #29291d;
+    --line: #3a3a28;
+    --text: #ece9dc;
+    --text-dim: #9c9782;
+    --accent: #c9a227;
+    --accent2: #7a8450;
+    --shadow: rgba(0,0,0,0.55);
+    --particle: 200,180,120;
+  }
+
+  :root[data-theme="bunker"] {
+    --bg: #0c1016;
+    --panel: #121821;
+    --panel-raised: #19222e;
+    --line: #223144;
+    --text: #e7f1f7;
+    --text-dim: #7f9bb3;
+    --accent: #4fd1c5;
+    --accent2: #ff4fd8;
+    --shadow: rgba(0,0,0,0.55);
+    --particle: 79,209,197;
+  }
+
+  :root[data-theme="frostbite"] {
+    --bg: #0d1319;
+    --panel: #131b23;
+    --panel-raised: #1a2530;
+    --line: #26384a;
+    --text: #eaf3fb;
+    --text-dim: #8ba6bc;
+    --accent: #6fc3ff;
+    --accent2: #d9f2ff;
+    --shadow: rgba(0,0,0,0.55);
+    --particle: 200,235,255;
+  }
+
+  :root[data-theme="blackout"] {
+    --bg: #060606;
+    --panel: #0f0f0f;
+    --panel-raised: #171717;
+    --line: #2a2a2a;
+    --text: #f5f5f5;
+    --text-dim: #8a8a8a;
+    --accent: #f5f5f5;
+    --accent2: #767676;
+    --shadow: rgba(0,0,0,0.7);
+    --particle: 240,240,240;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  #particleCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .display-face {
+    font-family: "Silkscreen", "Courier New", monospace;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---------- Top bar ---------- */
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .brand h1 {
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin: 0;
+    color: var(--accent);
+  }
+
+  .brand span.tag {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .search-wrap {
+    flex: 1;
+    max-width: 320px;
+    min-width: 160px;
+  }
+
+  #search {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  #search:focus { border-color: var(--accent); }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .audio-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 16px 8px 8px;
+  }
+
+  #musicToggle, #settingsBtn, #blankBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  #musicToggle {
+    border: none;
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  #musicToggle:hover, #settingsBtn:hover, #blankBtn:hover { transform: scale(1.06); }
+  #musicToggle:active, #settingsBtn:active, #blankBtn:active { transform: scale(0.96); }
+  #musicToggle.playing { background: var(--accent2); }
+  #settingsBtn:hover, #blankBtn:hover { border-color: var(--accent); }
+
+  #volume { width: 80px; accent-color: var(--accent); }
+
+  .track-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------- Grid ---------- */
+
+  main {
+    padding: 28px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .row-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .row-heading h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  #count { font-size: 12px; color: var(--text-dim); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+  }
+
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s ease, transform 0.12s ease;
+  }
+
+  .tile:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .tile:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+
+  .tile .icon-wrap {
+    aspect-ratio: 1 / 1;
+    background: var(--panel-raised);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .tile .icon-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .tile .icon-wrap .fallback {
+    font-family: "Silkscreen", monospace;
+    font-size: 28px;
+    color: var(--text-dim);
+  }
+
+  .tile .label { padding: 10px 12px 12px; font-size: 13px; font-weight: 600; line-height: 1.3; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+  .empty-state h3 { color: var(--text); font-family: "Silkscreen", monospace; font-size: 18px; margin-bottom: 8px; }
+
+  /* ---------- Modal (game) ---------- */
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 5, 5, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 960px;
+    height: 100%;
+    max-height: 720px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px var(--shadow);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .modal-header h3 { margin: 0; font-size: 15px; }
+
+  .modal-close, .panel-close {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .modal-close:hover, .panel-close:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+  .modal-body { flex: 1; background: #000; }
+  .modal-body iframe { width: 100%; height: 100%; border: none; display: block; }
+
+  /* ---------- Settings panel ---------- */
+
+  .settings-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 5, 5, 0.6);
+    display: none;
+    z-index: 200;
+    justify-content: flex-end;
+  }
+
+  .settings-backdrop.open { display: flex; }
+
+  .settings-panel {
+    background: var(--panel);
+    border-left: 1px solid var(--line);
+    width: 100%;
+    max-width: 360px;
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: -20px 0 60px var(--shadow);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+  }
+
+  .panel-header h3 { margin: 0; font-size: 16px; }
+
+  .panel-section { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .panel-section h4 {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  .theme-swatches {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .swatch {
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 8px;
+    cursor: pointer;
+    background: var(--panel-raised);
+    color: var(--text);
+    font-size: 11px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s ease;
+  }
+
+  .swatch.active { border-color: var(--accent); }
+
+  .swatch .dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .toggle-row:last-child { margin-bottom: 0; }
+
+  .switch {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .switch input { opacity: 0; width: 0; height: 0; }
+
+  .slider-pill {
+    position: absolute;
+    inset: 0;
+    background: var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .slider-pill::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: var(--text);
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+  }
+
+  .switch input:checked + .slider-pill { background: var(--accent); }
+  .switch input:checked + .slider-pill::before { transform: translateX(18px); background: var(--bg); }
+
+  .field-label { font-size: 13px; }
+
+  .panel-section select, .panel-section input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text);
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .panel-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .btn-full {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .btn-full:hover { border-color: var(--accent); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .btn-accent:hover { opacity: 0.9; }
+
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 8px; }
+
+  @media (max-width: 600px) {
+    header { padding: 16px; }
+    main { padding: 16px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+    .settings-panel { max-width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile, #musicToggle, #settingsBtn, #blankBtn { transition: none; }
+    .tile:hover { transform: none; }
+  }
+</style>
 </head>
 <body>
 
-<div id="edu-site">
-  <div class="edu-topbar">
-    <span>Doomsday</span>
-    <span>Digital Archive</span>
+<canvas id="particleCanvas"></canvas>
+
+<div class="page">
+
+<header>
+  <div class="brand">
+    <h1 class="display-face">DOOMSDAY</h1>
+    <span class="tag">your games, one shelf</span>
   </div>
-  <header class="edu-header">
-    <div class="edu-crest"></div>
-    <div>
-      <h1>Doomsday</h1>
-      <p>Every game they blocked. All in one place.</p>
+
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="Find a game..." autocomplete="off">
+  </div>
+
+  <div class="header-controls">
+    <div class="audio-control">
+      <button id="musicToggle" aria-label="Play background music" title="Play background music">▶</button>
+      <input id="volume" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="Music volume">
+      <span class="track-label" id="trackLabel">no track loaded</span>
     </div>
-  </header>
-  <nav class="edu-nav">
-    <a href="#">Home</a>
-    <a href="#">Announcements</a>
-    <a href="#">Assignments</a>
-    <a href="#">Library</a>
-    <a href="#">Resources</a>
-    <a href="#" id="request-btn-disguise">Request a Game</a>
-    <a href="#">Staff Directory</a>
-    <a href="#">Contact</a>
-  </nav>
+    <button id="blankBtn" aria-label="Open in about:blank" title="Open in about:blank">⧉</button>
+    <button id="settingsBtn" aria-label="Open settings" title="Settings">⚙</button>
+  </div>
+</header>
 
-  <main class="edu-main">
-    <div>
-      <section class="edu-hero">
-        <h2>Welcome back, Students</h2>
-        <p>This portal provides access to approved learning materials, subject guides, and district-wide
-        announcements. Please review your assignment calendar and check the resource library for supplemental
-        readings assigned by your instructors this week.</p>
-        <p>Reminder: all devices are subject to the district's acceptable use policy while connected to the
-        school network.</p>
-      </section>
+<main>
+  <div class="row-heading">
+    <h2 class="display-face">LIBRARY</h2>
+    <span id="count"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <h3>NO MATCHES</h3>
+    <p>Try a different search, or add more entries to the GAMES list in this file.</p>
+  </div>
+</main>
 
-      <section class="edu-cards">
-        <div class="edu-card">
-          <h3>Mathematics</h3>
-          <p>Unit 4 practice sets and review guides are now posted for all sections.</p>
-        </div>
-        <div class="edu-card">
-          <h3>Language Arts</h3>
-          <p>Independent reading logs due Friday. See your teacher's page for the current list.</p>
-        </div>
-        <div class="edu-card">
-          <h3>Science</h3>
-          <p>Lab safety quiz results have been posted to the gradebook.</p>
-        </div>
-        <div class="edu-card">
-          <h3>Social Studies</h3>
-          <p>Primary source packet for the unit project is available in the resource library.</p>
-        </div>
-        <div class="edu-card">
-          <h3>Study Hall</h3>
-          <p>Quiet workspace scheduling is open for the remainder of the term.</p>
-        </div>
-        <div class="edu-card">
-          <h3>Counseling</h3>
-          <p>Schedule changes may be requested through the front office until Thursday.</p>
-        </div>
-      </section>
-    </div>
-
-    <aside class="edu-sidebar">
-      <div class="edu-box">
-        <h4>Announcements</h4>
-        <ul>
-          <li>Early dismissal this Friday at 1:15pm.</li>
-          <li>Yearbook photos rescheduled to next week.</li>
-          <li>Parent-teacher conferences open for sign-up.</li>
-        </ul>
-      </div>
-      <div class="edu-box">
-        <h4>Quick Links</h4>
-        <ul>
-          <li><a href="#">Assignment Calendar</a></li>
-          <li><a href="#">Gradebook Login</a></li>
-          <li><a href="#">Library Catalog</a></li>
-          <li><a href="#">Bus Route Finder</a></li>
-        </ul>
-      </div>
-    </aside>
-  </main>
-
-  <footer class="edu-footer">
-    © Fairview Unified School District — Digital Learning Portal. For technical support, contact the IT help desk.
-  </footer>
-
-  <div class="edu-hint">press e</div>
 </div>
 
-<div id="flash"></div>
-
-<div id="archive-root" aria-hidden="true">
-  <div class="loader-wrap">
-    <div class="loader-noise"></div>
-    <div class="loader-text">DOOMSDAY</div>
-    <div class="loader-sub">one sec</div>
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Game</h3>
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <iframe id="gameFrame" src="" title="Game" allow="fullscreen; gamepad; autoplay" sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"></iframe>
+    </div>
   </div>
 </div>
 
-<div id="archive-site">
-  <header class="arc-header">
-    <div class="arc-logo">DOOMSDAY</div>
-    <nav class="arc-nav">
-      <a href="#" id="request-btn">Request a Game</a>
-      <a href="#" id="settings-btn">Settings</a>
-    </nav>
-  </header>
+<div class="settings-backdrop" id="settingsBackdrop">
+  <div class="settings-panel">
+    <div class="panel-header">
+      <h3 class="display-face">SETTINGS</h3>
+      <button class="panel-close" id="panelClose" aria-label="Close settings">✕</button>
+    </div>
 
-  <div id="browse-view">
-    <section class="arc-hero">
-      <h1>Every game they blocked. I added, You're Welcome.</h1>
-      <div class="arc-search">
-        <input type="text" placeholder="search Doomsday..." />
-        <button>Find</button>
+    <div class="panel-section">
+      <h4>Theme</h4>
+      <div class="theme-swatches" id="themeSwatches"></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Background</h4>
+      <div class="toggle-row">
+        <span class="field-label">Particles</span>
+        <label class="switch">
+          <input type="checkbox" id="particlesToggle" checked>
+          <span class="slider-pill"></span>
+        </label>
       </div>
-    </section>
-
-    <section class="arc-grid" id="game-grid"></section>
-
-    <section class="arc-request-cta">
-      <div class="arc-request-cta-inner">
-        <h2>Can't find what you're looking for?</h2>
-        <p>If a game's missing or blocked, request it and we'll try to add it to Doomsday.</p>
-        <button type="button" id="request-cta-btn" class="arc-request-btn">Request a Game</button>
-      </div>
-    </section>
-  </div>
-
-  <div id="settings-view">
-    <div class="settings-page-inner">
-      <button type="button" id="settings-back" class="settings-back-btn">← back to archive</button>
-
-      <div class="settings-panel">
-        <div class="settings-header">
-          <span>Settings</span>
-        </div>
-        <div class="settings-body">
-          <div class="settings-group">
-            <h4>Theme</h4>
-            <div class="theme-row" id="theme-row">
-              <div class="theme-swatch" data-theme="default" style="background:#0a0a0a; border-color:#3a3a3a;" title="Black"></div>
-              <div class="theme-swatch" data-theme="mono" style="background:#e8e8e8;" title="White"></div>
-              <div class="theme-swatch" data-theme="blue" style="background:#3d7bff;" title="Blue"></div>
-              <div class="theme-swatch" data-theme="teal" style="background:#2fcf9e;" title="Teal"></div>
-              <div class="theme-swatch" data-theme="red" style="background:#ef4444;" title="Red"></div>
-              <div class="theme-swatch" data-theme="amber" style="background:#f5a623;" title="Orange"></div>
-              <div class="theme-swatch" data-theme="purple" style="background:#6a5cff;" title="Purple"></div>
-              <div class="theme-swatch" data-theme="magenta" style="background:#d94fd9;" title="Magenta"></div>
-            </div>
-          </div>
-
-          <div class="settings-group">
-            <h4>Background FX</h4>
-            <div class="settings-row">
-              <span class="label">Weather / particles<small>Ambient background effect</small></span>
-              <select class="settings-select" id="fx-select">
-                <option value="off">Off</option>
-                <option value="rain">Rain</option>
-                <option value="snow">Snow</option>
-                <option value="matrix">Matrix</option>
-                <option value="stars">Stars</option>
-                <option value="constellations">Constellations</option>
-                <option value="particles">Particles</option>
-              </select>
-            </div>
-            <div class="settings-row">
-              <span class="label">Density<small>Amount of particles</small></span>
-              <select class="settings-select" id="fx-density">
-                <option value="0.5">Low</option>
-                <option value="1">Normal</option>
-                <option value="1.8">High</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="settings-group">
-            <h4>Layout</h4>
-            <div class="settings-row">
-              <span class="label">Grid size<small>Adjust tile density</small></span>
-              <select class="settings-select" id="grid-size-select">
-                <option value="140">Compact</option>
-                <option value="180">Default</option>
-                <option value="220">Large</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="settings-group">
-            <h4>Behavior</h4>
-            <div class="settings-row">
-              <span class="label">Fullscreen on play<small>Auto-expand game window</small></span>
-              <div class="toggle" id="toggle-fullscreen"></div>
-            </div>
-            <div class="settings-row">
-              <span class="label">Confirm before closing game<small>Ask before exiting a game</small></span>
-              <div class="toggle" id="toggle-confirm-close"></div>
-            </div>
-            <div class="settings-row">
-              <span class="label">Reduce motion<small>Disable hover/transition animations</small></span>
-              <div class="toggle" id="toggle-reduce-motion"></div>
-            </div>
-          </div>
-
-          <div class="settings-group">
-            <h4>Tab Cloaking</h4>
-            <div class="settings-row">
-              <span class="label">Enable tab cloaking<small>Disguise the tab title and icon</small></span>
-              <div class="toggle" id="toggle-cloak"></div>
-            </div>
-            <div class="settings-row">
-              <span class="label">Tab title<small>Custom title for the tab</small></span>
-              <input type="text" class="settings-input" id="cloak-title" placeholder="Classes">
-            </div>
-            <div class="settings-row">
-              <span class="label">Favicon URL<small>Custom favicon URL</small></span>
-              <input type="text" class="settings-input" id="cloak-favicon" placeholder="https://www.gstatic.com/classroom/logo_square_rounded.svg">
-            </div>
-            <div class="settings-row">
-              <span class="label">Open in cloaked tab<small>Launch about:blank with this site inside</small></span>
-              <button type="button" class="game-btn" id="cloak-open-btn">open about:blank</button>
-            </div>
-          </div>
-        </div>
+      <div>
+        <span class="field-label">Density</span>
+        <input type="range" id="particleDensity" min="10" max="150" step="5" value="60">
       </div>
     </div>
-  </div>
 
-  <footer class="arc-footer">DOOMSDAY — this device leaves no logs</footer>
-</div>
-
-<div class="request-scrim" id="request-scrim" aria-hidden="true">
-  <div class="request-modal" role="dialog" aria-modal="true" aria-label="Request a game">
-    <div class="request-modal-bar">
-      <span class="request-modal-title">Request a Game</span>
-      <button type="button" class="request-close" id="request-close" aria-label="Close">&times;</button>
+    <div class="panel-section">
+      <h4>Tab cloaking</h4>
+      <div class="field-label">Disguise this tab as:</div>
+      <select id="cloakSelect">
+        <option value="none">None (Doomsday)</option>
+        <option value="classroom">Google Classroom</option>
+        <option value="drive">Google Drive</option>
+        <option value="docs">Google Docs</option>
+        <option value="gmail">Gmail</option>
+        <option value="search">Google Search</option>
+        <option value="custom">Custom...</option>
+      </select>
+      <input type="text" id="customTitle" placeholder="Custom tab title" style="display:none;">
+      <p class="panel-note">Changes the tab's title and icon only. It reverts if you reload the page unless you leave a disguise selected.</p>
+      <button class="btn-full btn-accent" id="blankBtn2">Open in about:blank</button>
+      <p class="panel-note">Opens this whole page in a fresh window whose address bar just says "about:blank" — handy for a quick, deniable-looking tab. It doesn't hide anything from someone with access to your browser history or network.</p>
     </div>
-    <form class="request-form" id="request-form">
-      <label class="request-field">
-        <span class="request-label">Game title</span>
-        <input type="text" id="request-name" class="request-input" placeholder="e.g. Retro Bowl" required maxlength="80" />
-      </label>
-      <label class="request-field">
-        <span class="request-label">Anything else? <em>(optional)</em></span>
-        <textarea id="request-note" class="request-textarea" placeholder="link, category, why you want it..." maxlength="280" rows="3"></textarea>
-      </label>
-      <div class="request-actions">
-        <span class="request-hint" id="request-hint"></span>
-        <button type="submit" class="request-submit">Send request</button>
-      </div>
-    </form>
   </div>
 </div>
 
-<canvas id="fx"></canvas>
+<audio id="bgAudio" loop preload="none"></audio>
 
-<script src="./script.js" defer></script>
-<script src="./gamepix.js" defer></script>
+<script>
+  // ============================================================
+  // CONFIGURE YOUR GAMES HERE.
+  // - tag: category used to organize/filter games
+  // - file: relative path or full URL for the game
+  // - title: display name
+  // - icon: relative path or full URL for the icon (leave "" for a placeholder)
+  // ============================================================
+  const GAMES = [
+    { tag: "Arcade",  title: "Slope",              file: "./g/slope.html",              icon: "./g/assets/slope.png" },
+    { tag: "Shooter", title: "1v1.LOL",            file: "./g/1v1.lol.html",            icon: "./g/assets/1v1.lol.png" },
+    { tag: "Sports",  title: "Basket Bros",        file: "./g/basket-bros.html",        icon: "./g/assets/basket-bros.png" },
+    { tag: "Arcade",  title: "Moto X3M",           file: "./g/moto-x3m.html",           icon: "./g/assets/moto-x3m.png" },
+    { tag: "Puzzle",  title: "Cookie Clicker",     file: "./g/cookie-clicker.html",     icon: "./g/assets/cookie-clicker.png" },
+    { tag: "Arcade",  title: "Escape Road City 2", file: "./g/escape-road-city-2.html", icon: "./g/assets/escape-road-city-2.png" },
+    { tag: "Arcade",  title: "Tomb Of The Mask",   file: "./g/tomb-of-the-mask.html",   icon: "./g/assets/tomb-of-the-mask.png" },
+    { tag: "Sports",  title: "Retro Bowl",         file: "https://script.google.com/macros/s/AKfycbxkfMHeNjgt0LuksJhoAGS_T1jAnsQTkGw9GIRRi2VTljTi4t46Q0HIkslBvD7WOyXPHg/exec", icon: "./g/assets/retro-bowl.jpg" },
+    { tag: "Sports",  title: "Football Bros",      file: "./g/football-bros.html",      icon: "./g/assets/football-bros.png" },
+    { tag: "Sports",  title: "Baseball Bros",      file: "./g/baseball-bros.html",      icon: "./g/assets/baseball-bros.jpg" },
+    { tag: "Sports",  title: "Basketball Stars",   file: "https://script.google.com/macros/s/AKfycbwzYMDDcdDUAvEP7iO6OdRk-5_oUp6vYvDdyEEz8tTOzWi5y4-Qf3vQ6TBoZuc9UYVcLg/exec", icon: "./g/assets/basketball-stars.jpg" },
+    { tag: "Horror",  title: "Granny",             file: "./g/granny.html",             icon: "./g/assets/granny.jpg" },
+    { tag: "Horror",  title: "Granny 2",           file: "./g/granny-2.html",           icon: "./g/assets/granny-2.jpg" },
+    { tag: "Horror",  title: "FNAF",               file: "https://script.google.com/macros/s/AKfycbxJNtrKTWPCSIo9tOqq53G2xqoQCIPDTYUsVOT79Eqk8I7C5cQkGdDnj0jzlNHa7bvs3g/exec", icon: "./g/assets/fnaf.jpg" },
+    { tag: "Horror",  title: "FNAF 2",             file: "https://jasongamesdev.github.io/fnaf-2/", icon: "./g/assets/fnaf2.jpg" },
+    { tag: "Horror",  title: "FNAF 3",             file: "https://script.google.com/macros/s/AKfycbyVdPAG4aRGh5tmBwKEZthKmaqO12GTD-h-C1Do6ICbR3ZEj5ic1aJQ2e4Im2pxcWLf/exec", icon: "./g/assets/fnaf3.jpg" },
+    { tag: "Horror",  title: "FNAF 4",             file: "./g/fnaf4.html",             icon: "./g/assets/fnaf4.jpg" }
+  ];
+
+  // Path to a background track inside ./g/assets/bg-music/
+  const BG_TRACK = "";        // e.g. "lofi-loop.mp3"
+  const BG_TRACK_LABEL = "";  // e.g. "Lo-fi Loop"
+
+  const GAMES_ROOT = "./g/";
+  const ASSETS_ROOT = "./g/assets/";
+  const MUSIC_ROOT = "./g/assets/bg-music/";
+
+  // ---------- Render grid ----------
+
+  const grid = document.getElementById("grid");
+  const countEl = document.getElementById("count");
+  const emptyState = document.getElementById("emptyState");
+
+  function renderGrid(list) {
+    grid.innerHTML = "";
+    if (list.length === 0) {
+      emptyState.style.display = "block";
+      countEl.textContent = "";
+      return;
+    }
+    emptyState.style.display = "none";
+    countEl.textContent = list.length + (list.length === 1 ? " game" : " games");
+
+    list.forEach(game => {
+      const tile = document.createElement("button");
+      tile.className = "tile";
+      tile.type = "button";
+      tile.setAttribute("aria-label", "Open " + game.title);
+
+      const iconWrap = document.createElement("div");
+      iconWrap.className = "icon-wrap";
+
+      if (game.icon) {
+        const img = document.createElement("img");
+        img.src = game.icon;
+        img.alt = "";
+        img.loading = "lazy";
+        img.onerror = () => {
+          iconWrap.innerHTML = "";
+          const fb = document.createElement("span");
+          fb.className = "fallback";
+          fb.textContent = game.title.slice(0, 2).toUpperCase();
+          iconWrap.appendChild(fb);
+        };
+        iconWrap.appendChild(img);
+      } else {
+        const fb = document.createElement("span");
+        fb.className = "fallback";
+        fb.textContent = game.title.slice(0, 2).toUpperCase();
+        iconWrap.appendChild(fb);
+      }
+
+      const label = document.createElement("div");
+      label.className = "label";
+      label.textContent = game.title;
+
+      tile.appendChild(iconWrap);
+      tile.appendChild(label);
+      tile.addEventListener("click", () => openGame(game));
+
+      grid.appendChild(tile);
+    });
+  }
+
+  renderGrid(GAMES);
+
+  document.getElementById("search").addEventListener("input", (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    renderGrid(GAMES.filter(g => g.title.toLowerCase().includes(q)));
+  });
+
+  // ---------- Game modal ----------
+
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalTitle = document.getElementById("modalTitle");
+  const gameFrame = document.getElementById("gameFrame");
+
+  function openGame(game) {
+    modalTitle.textContent = game.title;
+    gameFrame.src = game.file;
+    modalBackdrop.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeGame() {
+    modalBackdrop.classList.remove("open");
+    gameFrame.src = "";
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("modalClose").addEventListener("click", closeGame);
+  modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) closeGame(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (modalBackdrop.classList.contains("open")) closeGame();
+      if (settingsBackdrop.classList.contains("open")) closeSettings();
+    }
+  });
+
+  // ---------- Background music ----------
+
+  const bgAudio = document.getElementById("bgAudio");
+  const musicToggle = document.getElementById("musicToggle");
+  const volumeSlider = document.getElementById("volume");
+  const trackLabel = document.getElementById("trackLabel");
+
+  bgAudio.volume = parseFloat(volumeSlider.value);
+
+  if (BG_TRACK) {
+    bgAudio.src = MUSIC_ROOT + BG_TRACK;
+    trackLabel.textContent = BG_TRACK_LABEL || BG_TRACK;
+  } else {
+    musicToggle.disabled = true;
+    musicToggle.style.opacity = "0.4";
+    musicToggle.style.cursor = "not-allowed";
+    trackLabel.textContent = "no track set";
+  }
+
+  musicToggle.addEventListener("click", () => {
+    if (bgAudio.paused) {
+      bgAudio.play().then(() => {
+        musicToggle.textContent = "❚❚";
+        musicToggle.classList.add("playing");
+        musicToggle.setAttribute("aria-label", "Pause background music");
+      }).catch(() => { trackLabel.textContent = "couldn't play track"; });
+    } else {
+      bgAudio.pause();
+      musicToggle.textContent = "▶";
+      musicToggle.classList.remove("playing");
+      musicToggle.setAttribute("aria-label", "Play background music");
+    }
+  });
+
+  volumeSlider.addEventListener("input", () => { bgAudio.volume = parseFloat(volumeSlider.value); });
+
+  // ---------- Settings panel open/close ----------
+
+  const settingsBackdrop = document.getElementById("settingsBackdrop");
+  document.getElementById("settingsBtn").addEventListener("click", () => settingsBackdrop.classList.add("open"));
+  document.getElementById("panelClose").addEventListener("click", closeSettings);
+  settingsBackdrop.addEventListener("click", (e) => { if (e.target === settingsBackdrop) closeSettings(); });
+  function closeSettings() { settingsBackdrop.classList.remove("open"); }
+
+  // ---------- Themes ----------
+
+  const THEMES = [
+    { id: "doomsday",  name: "Doomsday",  color: "#ff4d2e" },
+    { id: "wasteland", name: "Wasteland", color: "#c9a227" },
+    { id: "bunker",    name: "Bunker",    color: "#4fd1c5" },
+    { id: "frostbite", name: "Frostbite", color: "#6fc3ff" },
+    { id: "blackout",  name: "Blackout",  color: "#f5f5f5" },
+  ];
+
+  const themeSwatches = document.getElementById("themeSwatches");
+  const root = document.documentElement;
+
+  function renderSwatches() {
+    themeSwatches.innerHTML = "";
+    const current = root.getAttribute("data-theme");
+    THEMES.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "swatch" + (t.id === current ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = '<span class="dot" style="background:' + t.color + '"></span>' + t.name;
+      btn.addEventListener("click", () => {
+        root.setAttribute("data-theme", t.id);
+        localStorage.setItem("doomsday-theme", t.id);
+        renderSwatches();
+      });
+      themeSwatches.appendChild(btn);
+    });
+  }
+
+  const savedTheme = localStorage.getItem("doomsday-theme");
+  if (savedTheme && THEMES.some(t => t.id === savedTheme)) {
+    root.setAttribute("data-theme", savedTheme);
+  }
+  renderSwatches();
+
+  // ---------- Particle background ----------
+
+  const canvas = document.getElementById("particleCanvas");
+  const ctx = canvas.getContext("2d");
+  const particlesToggle = document.getElementById("particlesToggle");
+  const densitySlider = document.getElementById("particleDensity");
+  let particles = [];
+  let particlesEnabled = localStorage.getItem("doomsday-particles") !== "off";
+  let density = parseInt(localStorage.getItem("doomsday-density") || "60", 10);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  particlesToggle.checked = particlesEnabled;
+  densitySlider.value = density;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  function getParticleColor() {
+    const style = getComputedStyle(root);
+    return style.getPropertyValue("--particle").trim() || "255,120,70";
+  }
+
+  function makeParticles(count) {
+    particles = [];
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: 0.8 + Math.random() * 2.2,
+        speedY: 0.15 + Math.random() * 0.4,
+        speedX: (Math.random() - 0.5) * 0.3,
+        alpha: 0.15 + Math.random() * 0.4,
+      });
+    }
+  }
+
+  makeParticles(density);
+
+  function tick() {
+    requestAnimationFrame(tick);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!particlesEnabled) return;
+
+    const color = getParticleColor();
+    particles.forEach(p => {
+      p.y -= p.speedY;
+      p.x += p.speedX;
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(" + color + "," + p.alpha + ")";
+      ctx.fill();
+    });
+  }
+
+  if (!reduceMotion) {
+    tick();
+  } else {
+    // Draw a single static frame instead of animating continuously.
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (particlesEnabled) {
+      const color = getParticleColor();
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(" + color + "," + p.alpha + ")";
+        ctx.fill();
+      });
+    }
+  }
+
+  particlesToggle.addEventListener("change", () => {
+    particlesEnabled = particlesToggle.checked;
+    localStorage.setItem("doomsday-particles", particlesEnabled ? "on" : "off");
+    if (reduceMotion) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (particlesEnabled) {
+        const color = getParticleColor();
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(" + color + "," + p.alpha + ")";
+          ctx.fill();
+        });
+      }
+    }
+  });
+
+  densitySlider.addEventListener("input", () => {
+    density = parseInt(densitySlider.value, 10);
+    localStorage.setItem("doomsday-density", String(density));
+    makeParticles(density);
+  });
+
+  // ---------- Tab cloaking ----------
+
+  const CLOAKS = {
+    none:      { title: "Doomsday", icon: document.getElementById("favicon").href },
+    classroom: { title: "Classes", icon: "https://www.google.com/s2/favicons?sz=64&domain=classroom.google.com" },
+    drive:     { title: "My Drive - Google Drive", icon: "https://www.google.com/s2/favicons?sz=64&domain=drive.google.com" },
+    docs:      { title: "Untitled document - Google Docs", icon: "https://www.google.com/s2/favicons?sz=64&domain=docs.google.com" },
+    gmail:     { title: "Inbox - Gmail", icon: "https://www.google.com/s2/favicons?sz=64&domain=mail.google.com" },
+    search:    { title: "Google", icon: "https://www.google.com/s2/favicons?sz=64&domain=google.com" },
+  };
+
+  const cloakSelect = document.getElementById("cloakSelect");
+  const customTitleInput = document.getElementById("customTitle");
+  const pageTitle = document.getElementById("pageTitle");
+  const faviconLink = document.getElementById("favicon");
+
+  function applyCloak(key, customText) {
+    if (key === "custom") {
+      const text = customText || "New Tab";
+      document.title = text;
+      faviconLink.href = "https://www.google.com/s2/favicons?sz=64&domain=google.com";
+    } else {
+      const cloak = CLOAKS[key] || CLOAKS.none;
+      document.title = cloak.title;
+      faviconLink.href = cloak.icon;
+    }
+    localStorage.setItem("doomsday-cloak", key);
+    if (key === "custom") localStorage.setItem("doomsday-cloak-custom", customText || "");
+  }
+
+  cloakSelect.addEventListener("change", () => {
+    customTitleInput.style.display = cloakSelect.value === "custom" ? "block" : "none";
+    applyCloak(cloakSelect.value, customTitleInput.value);
+  });
+
+  customTitleInput.addEventListener("input", () => {
+    if (cloakSelect.value === "custom") applyCloak("custom", customTitleInput.value);
+  });
+
+  const savedCloak = localStorage.getItem("doomsday-cloak");
+  if (savedCloak) {
+    cloakSelect.value = savedCloak;
+    if (savedCloak === "custom") {
+      customTitleInput.style.display = "block";
+      customTitleInput.value = localStorage.getItem("doomsday-cloak-custom") || "";
+    }
+    applyCloak(savedCloak, customTitleInput.value);
+  }
+
+  // ---------- Open in about:blank ----------
+
+  function openInAboutBlank() {
+    const win = window.open("about:blank", "_blank");
+    if (!win) {
+      alert("Your browser blocked the new window. Allow pop-ups for this site and try again.");
+      return;
+    }
+    const doc = win.document;
+    doc.open();
+    doc.write("<!DOCTYPE html><html><head><base href='" + document.baseURI + "'></head><body></body></html>");
+    doc.close();
+    // Copy the current page's rendered markup into the new blank-addressed window.
+    doc.head.innerHTML = document.head.innerHTML;
+    doc.body.innerHTML = document.body.innerHTML;
+    // Re-run scripts, since innerHTML assignment doesn't execute <script> tags.
+    Array.from(document.querySelectorAll("script")).forEach(oldScript => {
+      const newScript = doc.createElement("script");
+      if (oldScript.src) {
+        newScript.src = oldScript.src;
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+      doc.body.appendChild(newScript);
+    });
+    win.focus();
+  }
+
+  document.getElementById("blankBtn").addEventListener("click", openInAboutBlank);
+  document.getElementById("blankBtn2").addEventListener("click", openInAboutBlank);
+</script>
 
 </body>
 </html>
