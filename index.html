@@ -1462,14 +1462,6 @@ function filterGames(q) {
 let activeGame = null;
 
 function openGame(g) {
-  if (g?.external && g.path) {
-    const popup = window.open(g.path, '_blank');
-    if (!popup) {
-      alert('Your browser blocked the new tab. Please allow popups for Doomsday and try again.');
-    }
-    return;
-  }
-
   const view = document.getElementById('game-view');
   const frame = document.getElementById('game-frame');
   const titleBar = document.getElementById('game-title-bar');
@@ -1771,8 +1763,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameFrame?.addEventListener('load', () => {
     // A successful local game load reaches here immediately.
-    // For external games, the provider may still refuse iframe embedding;
-    // the Open tab fallback remains available.
+    // External games are loaded in the same modal iframe when the provider
+    // permits embedding. The existing Open tab button remains a manual fallback.
     setTimeout(() => gameLoading?.classList.add('hidden'), 180);
   });
 
