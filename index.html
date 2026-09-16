@@ -1409,11 +1409,11 @@ function renderGameCard(rawGame, index) {
   card.appendChild(thumb);
   card.appendChild(info);
 
-  card.addEventListener('click', () => openGame(g));
+  card.addEventListener('click', () => openGameInBlankTab(g));
   card.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      openGame(g);
+      openGameInBlankTab(g);
     }
   });
 
@@ -1461,42 +1461,71 @@ function filterGames(q) {
 =================================================== */
 let activeGame = null;
 
-function openGame(g) {
-  const view = document.getElementById('game-view');
-  const frame = document.getElementById('game-frame');
-  const titleBar = document.getElementById('game-title-bar');
-  const loading = document.getElementById('game-loading');
-  const error = document.getElementById('game-error');
+async function fetchGameHTML(url) {
+  const response = await fetch(url, {
+    cache: 'no-store',
+    credentials: 'omit'
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
+  const html = await response.text();
+  // Make relative assets/scripts inside fetched CDN HTML resolve against
+  // the original CDN game directory instead of the Doomsday page.
+  const baseUrl = new URL(url, location.href).href;
+  const baseTag = `<base href="${baseUrl.replace(/\"/g, '&quot;')}">`;
+
+  if (/<head\b[^>]*>/i.test(html)) {
+    return html.replace(/<head\b[^>]*>/i, match => match + baseTag);
+  }
+  return `<!doctype html><html><head>${baseTag}</head><body>${html}</body></html>`;
+}
+
+function openGameInBlankTab(g) {
   if (!g || !g.path) {
     console.error('Game has no playable file:', g);
     return;
   }
 
-  activeGame = g;
-  titleBar.textContent = g.title;
-  frame.src = 'about:blank';
-  error.classList.remove('open');
-  loading.classList.remove('hidden');
-
-  // Set the real game URL AFTER resetting the frame.
-  // Local ./g/*.html games now resolve correctly on GitHub Pages/Netlify.
-  requestAnimationFrame(() => {
-    frame.src = g.path;
-  });
-
-  view.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  if (S.fullscreen) {
-    setTimeout(() => {
-      try {
-        if (!document.fullscreenElement && view.requestFullscreen) {
-          view.requestFullscreen();
-        }
-      } catch (e) {}
-    }, 100);
+  const popup = window.open('about:blank', '_blank');
+  if (!popup) {
+    alert('Your browser blocked the new tab. Please allow popups for Doomsday and try again.');
+    return;
   }
+
+  const isGNMath = g.source === 'GN-Math';
+  const gameUrl = new URL(g.path, location.href).href;
+  const title = String(g.title || 'Game').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+
+  // Keep the about:blank tab lightweight while the game is prepared.
+  popup.document.open();
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="game-frame" allow="autoplay; fullscreen; gamepad; pointer-lock" allowfullscreen></iframe></body></html>`);
+  popup.document.close();
+
+  const frame = popup.document.getElementById('game-frame');
+
+  if (isGNMath) {
+    // GN-Math entries point at HTML files on the CDN. Fetch the source and
+    // put the HTML into the iframe so the CDN page itself is not navigated to.
+    fetchGameHTML(g.path)
+      .then(html => {
+        if (!popup.closed && frame) frame.srcdoc = html;
+      })
+      .catch(err => {
+        console.error('[Doomsday] Could not fetch GN-Math HTML:', err);
+        if (!popup.closed && frame) {
+          frame.srcdoc = '<!doctype html><html><body style="background:#000;color:#fff;font-family:monospace;padding:24px">Could not load this game.</body></html>';
+        }
+      });
+  } else {
+    // Every other game is loaded as the requested URL inside the iframe.
+    frame.src = gameUrl;
+  }
+}
+
+function openGame(g) {
+  // Clicking a game always launches an about:blank tab containing an iframe.
+  // Keep this function for any existing programmatic callers.
+  openGameInBlankTab(g);
 }
 
 function closeGame(force = false) {
@@ -1522,11 +1551,11 @@ function closeGame(force = false) {
   activeGame = null;
 }
 
-function openActiveGameInNewTab() {
+async function openActiveGameInNewTab() {
   if (!activeGame?.path) return;
-  const popup = window.open(activeGame.path, '_blank');
-  if (!popup) alert('Your browser blocked the new tab. Please allow popups for Doomsday and try again.');
+  openGameInBlankTab(activeGame);
 }
+
 
 /* ===================================================
    NAVIGATION / VIEW SWITCHING
